@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AmmStrategy } from './strategies/Amm'
+import { LendingStrategy } from './strategies/Lending'
 
 type Screen = 'home' | 'amm' | 'lending'
 
@@ -43,12 +44,7 @@ export default function App() {
         ← Strategies
       </button>
       {screen === 'amm' && <AmmStrategy />}
-      {screen === 'lending' && (
-        <div className="home">
-          <h1>Lending</h1>
-          <p className="home-tagline">Coming in the next pass.</p>
-        </div>
-      )}
+      {screen === 'lending' && <LendingStrategy />}
     </div>
   )
 }

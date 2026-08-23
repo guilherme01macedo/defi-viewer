@@ -36,6 +36,7 @@ export interface LendEvent {
   id: number
   kind: LendEventKind
   amount: number // GOLD for pours, GEM for lock/unlock/liquidate seizures
+  gold?: number // liquidations only: the GOLD debt the liquidator repaid
   who: 'user' | number // number = NPC borrower id
   visitId?: number
 }
@@ -286,7 +287,8 @@ export function lendingReducer(
       const result = liquidate(target, state.market.price)
       const market = {
         ...state.market,
-        borrowed: state.market.borrowed - result.repaidGold,
+        // clamp: repaying the last debt can leave -1e-13 behind
+        borrowed: Math.max(0, state.market.borrowed - result.repaidGold),
       }
       const isUser = action.who === 'user'
       return {
@@ -307,6 +309,7 @@ export function lendingReducer(
         ...pushEvent(state, {
           kind: 'liquidate',
           amount: result.seizedGem,
+          gold: result.repaidGold,
           who: action.who,
           visitId: action.visitId,
         }),

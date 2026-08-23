@@ -352,3 +352,20 @@ body,
   font-size: 9.5px;
   fill: #94a3b8;
 }
+
+.oracle-price {
+  font-size: 13px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 4px;
+}
+
+.oracle-price .gem {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.oracle-price .gold {
+  color: #fbbf24;
+  font-weight: 600;
+}

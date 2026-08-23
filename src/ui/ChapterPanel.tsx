@@ -1,7 +1,12 @@
-import type { Chapter } from '../chapters/chapters'
+// The panel only needs text, so any strategy's chapter type fits.
+export interface ChapterInfo {
+  title: string
+  body: string
+  task?: { label: string }
+}
 
 interface Props {
-  chapter: Chapter
+  chapter: ChapterInfo
   index: number
   count: number
   taskDone: boolean
