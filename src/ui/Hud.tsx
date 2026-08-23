@@ -1,7 +1,7 @@
 import type { Dispatch } from 'react'
 import type { ActionKey, FeatureKey } from '../chapters/chapters'
 import type { SimAction, SimState } from '../state/useSim'
-import { positionAmounts, price } from '../sim/pool'
+import { matchingGoldAmount, positionAmounts, price } from '../sim/pool'
 
 const fmt = (n: number, digits = 1) =>
   n.toLocaleString('en-US', { maximumFractionDigits: digits })
@@ -13,6 +13,8 @@ interface Props {
   features: Set<FeatureKey>
   autoTraders: boolean
   onToggleTraders: () => void
+  speed: number
+  onCycleSpeed: () => void
   onPriceShock: () => void
 }
 
@@ -23,6 +25,8 @@ export function Hud({
   features,
   autoTraders,
   onToggleTraders,
+  speed,
+  onCycleSpeed,
   onPriceShock,
 }: Props) {
   const { pool, wallet, entry, userFees, stats } = state
@@ -31,6 +35,8 @@ export function Hud({
     pool.totalShares === 0 ? 0 : (wallet.shares / pool.totalShares) * 100
   const showPool = features.has('tank')
   const anyAction = actions.size > 0
+  const canAddLiquidity =
+    wallet.GEM >= 100 && wallet.GOLD >= matchingGoldAmount(pool, 100)
 
   // Value of the LP position vs simply holding the deposited tokens,
   // all measured in GOLD. The net splits exactly into two forces:
@@ -77,16 +83,25 @@ export function Hud({
           <h2>Act</h2>
           {actions.has('swap') && (
             <>
-              <button onClick={() => dispatch({ type: 'userSwap', tokenIn: 'GOLD', amountIn: 25 })}>
+              <button
+                disabled={wallet.GOLD < 25}
+                onClick={() => dispatch({ type: 'userSwap', tokenIn: 'GOLD', amountIn: 25 })}
+              >
                 Swap 25 GOLD → GEM
               </button>
-              <button onClick={() => dispatch({ type: 'userSwap', tokenIn: 'GEM', amountIn: 25 })}>
+              <button
+                disabled={wallet.GEM < 25}
+                onClick={() => dispatch({ type: 'userSwap', tokenIn: 'GEM', amountIn: 25 })}
+              >
                 Swap 25 GEM → GOLD
               </button>
             </>
           )}
           {actions.has('addLiquidity') && (
-            <button onClick={() => dispatch({ type: 'addLiquidity', gemAmount: 100 })}>
+            <button
+              disabled={!canAddLiquidity}
+              onClick={() => dispatch({ type: 'addLiquidity', gemAmount: 100 })}
+            >
               Add liquidity (100 GEM + matching GOLD)
             </button>
           )}
@@ -96,9 +111,14 @@ export function Hud({
             </button>
           )}
           {actions.has('autoTraders') && (
-            <button onClick={onToggleTraders} className={autoTraders ? 'active' : ''}>
-              {autoTraders ? 'Stop' : 'Start'} auto traders
-            </button>
+            <>
+              <button onClick={onToggleTraders} className={autoTraders ? 'active' : ''}>
+                {autoTraders ? 'Stop' : 'Start'} auto traders
+              </button>
+              <button onClick={onCycleSpeed} disabled={!autoTraders}>
+                Trader speed: {speed}×
+              </button>
+            </>
           )}
           {actions.has('priceShock') && (
             <button onClick={onPriceShock} className="shock">

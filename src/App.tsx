@@ -16,9 +16,14 @@ import type { Visit } from './state/visits'
 // pour animation) dispatches at the moment of arrival.
 const WALK_IN_MS = 1400
 
+// Seconds-ish between trader spawns at 1x.
+const SPAWN_INTERVAL_MS = 2800
+const SPEEDS = [0.5, 1, 2, 4]
+
 export default function App() {
   const [state, dispatch] = useSim()
   const [autoTraders, setAutoTraders] = useState(false)
+  const [speed, setSpeed] = useState(1)
   const [chapterIndex, setChapterIndex] = useState(0)
   // Stats snapshot from when the current chapter opened; chapter tasks
   // are judged against it ("one swap made during THIS chapter").
@@ -68,13 +73,17 @@ export default function App() {
       )
     }
     spawn()
-    const id = setInterval(spawn, 2800)
+    const id = setInterval(spawn, SPAWN_INTERVAL_MS / speed)
     return () => {
       clearInterval(id)
       timeouts.current.forEach(clearTimeout)
       timeouts.current = []
     }
-  }, [autoTraders, dispatch])
+  }, [autoTraders, speed, dispatch])
+
+  const cycleSpeed = () => {
+    setSpeed((s) => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length])
+  }
 
   const triggerPriceShock = () => {
     const visit: Visit = {
@@ -108,6 +117,8 @@ export default function App() {
         features={features}
         autoTraders={autoTraders}
         onToggleTraders={() => setAutoTraders((v) => !v)}
+        speed={speed}
+        onCycleSpeed={cycleSpeed}
         onPriceShock={triggerPriceShock}
       />
       {features.has('curve') && <CurvePanel pool={state.pool} />}

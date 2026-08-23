@@ -5,10 +5,13 @@ import { LiquidColumn } from './LiquidColumn'
 export const GEM_COLOR = '#38bdf8'
 export const GOLD_COLOR = '#fbbf24'
 
-// 1000 tokens of reserve == 2 world units of liquid height.
+// 1000 tokens of reserve == 2 world units of liquid height, unless a
+// reserve would overflow the glass — then both chambers share a smaller
+// scale, so the levels shrink together and their ratio stays honest.
 const HEIGHT_PER_TOKEN = 2 / 1000
 const CHAMBER = 1.6
 const WALL_HEIGHT = 3.2
+const MAX_LIQUID = WALL_HEIGHT - 0.25
 
 interface Props {
   pool: Pool
@@ -17,8 +20,10 @@ interface Props {
 // The pool as a two-chambered glass tank. The liquid levels ARE the
 // reserves; the ratio of the levels is the price.
 export function Tank({ pool }: Props) {
-  const gemHeight = pool.reserves.GEM * HEIGHT_PER_TOKEN
-  const goldHeight = pool.reserves.GOLD * HEIGHT_PER_TOKEN
+  const maxReserve = Math.max(pool.reserves.GEM, pool.reserves.GOLD)
+  const unit = Math.min(HEIGHT_PER_TOKEN, MAX_LIQUID / maxReserve)
+  const gemHeight = pool.reserves.GEM * unit
+  const goldHeight = pool.reserves.GOLD * unit
   const half = CHAMBER / 2 + 0.05
 
   return (
