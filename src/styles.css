@@ -109,6 +109,89 @@ body,
   font-weight: 600;
 }
 
+/* home screen: strategy picker */
+.home {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.home h1 {
+  font-size: 34px;
+  letter-spacing: 0.01em;
+}
+
+.home-tagline {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 18px;
+}
+
+.home-cards {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.home-card {
+  width: 260px;
+  padding: 20px 18px;
+  text-align: left;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.home-card:hover {
+  border-color: #38bdf8;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.home-card h2 {
+  font-size: 17px;
+  margin-bottom: 8px;
+  color: #38bdf8;
+}
+
+.home-card p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+/* back-to-home button inside a strategy */
+.back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.back-button:hover {
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.with-back .hud {
+  top: 56px;
+}
+
 /* chapter narration, bottom center */
 .chapter {
   position: absolute;

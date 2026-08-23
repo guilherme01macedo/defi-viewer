@@ -1,135 +1,54 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  CHAPTERS,
-  revealedFeatures,
-  unlockedActions,
-} from './chapters/chapters'
-import { PoolScene } from './scene/PoolScene'
-import { ChapterPanel } from './ui/ChapterPanel'
-import { CurvePanel } from './ui/CurvePanel'
-import { Hud } from './ui/Hud'
-import { initialSim, useSim } from './state/useSim'
-import type { SimStats } from './state/useSim'
-import type { Visit } from './state/visits'
+import { useState } from 'react'
+import { AmmStrategy } from './strategies/Amm'
 
-// How long a trader walks before reaching the tank; the swap (and its
-// pour animation) dispatches at the moment of arrival.
-const WALK_IN_MS = 1400
+type Screen = 'home' | 'amm' | 'lending'
 
-// Seconds-ish between trader spawns at 1x.
-const SPAWN_INTERVAL_MS = 2800
-const SPEEDS = [0.5, 1, 2, 4]
-
+// Top-level router. Each strategy owns its own scene, chapters, and
+// state; going back to the home screen unmounts it and resets it.
 export default function App() {
-  const [state, dispatch] = useSim()
-  const [autoTraders, setAutoTraders] = useState(false)
-  const [speed, setSpeed] = useState(1)
-  const [chapterIndex, setChapterIndex] = useState(0)
-  // Stats snapshot from when the current chapter opened; chapter tasks
-  // are judged against it ("one swap made during THIS chapter").
-  const [baseline, setBaseline] = useState<SimStats>(initialSim.stats)
+  const [screen, setScreen] = useState<Screen>('home')
 
-  const [visits, setVisits] = useState<Visit[]>([])
-  const nextVisitId = useRef(1)
-  const timeouts = useRef<number[]>([])
-
-  const chapter = CHAPTERS[chapterIndex]
-  const actions = unlockedActions(chapterIndex)
-  const features = revealedFeatures(chapterIndex)
-  const taskDone = chapter.task ? chapter.task.isDone(state, baseline) : true
-
-  const nextChapter = () => {
-    setChapterIndex((i) => Math.min(i + 1, CHAPTERS.length - 1))
-    setBaseline(state.stats)
-  }
-
-  const skipTutorial = () => {
-    setChapterIndex(CHAPTERS.length - 1)
-    setBaseline(state.stats)
-  }
-
-  const removeVisit = useCallback((id: number) => {
-    setVisits((current) => current.filter((v) => v.id !== id))
-  }, [])
-
-  useEffect(() => {
-    if (!autoTraders) return
-    const spawn = () => {
-      const visit: Visit = {
-        id: nextVisitId.current++,
-        angle: 0.1 + Math.random() * 1.1,
-        tokenIn: Math.random() < 0.5 ? 'GEM' : 'GOLD',
-      }
-      setVisits((current) => [...current, visit])
-      timeouts.current.push(
-        window.setTimeout(() => {
-          dispatch({
-            type: 'traderSwap',
-            tokenIn: visit.tokenIn,
-            amountIn: 5 + Math.random() * 20,
-            visitId: visit.id,
-          })
-        }, WALK_IN_MS),
-      )
-    }
-    spawn()
-    const id = setInterval(spawn, SPAWN_INTERVAL_MS / speed)
-    return () => {
-      clearInterval(id)
-      timeouts.current.forEach(clearTimeout)
-      timeouts.current = []
-    }
-  }, [autoTraders, speed, dispatch])
-
-  const cycleSpeed = () => {
-    setSpeed((s) => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length])
-  }
-
-  const triggerPriceShock = () => {
-    const visit: Visit = {
-      id: nextVisitId.current++,
-      angle: 1.15,
-      tokenIn: state.stats.priceShockCount % 2 === 0 ? 'GOLD' : 'GEM',
-      whale: true,
-    }
-    setVisits((current) => [...current, visit])
-    timeouts.current.push(
-      window.setTimeout(() => {
-        dispatch({ type: 'priceShock', visitId: visit.id })
-      }, WALK_IN_MS),
+  if (screen === 'home') {
+    return (
+      <div className="app">
+        <div className="home">
+          <h1>DeFi Viewer</h1>
+          <p className="home-tagline">
+            Play with fictional tokens. Learn how a strategy moves value.
+          </p>
+          <div className="home-cards">
+            <button className="home-card" onClick={() => setScreen('amm')}>
+              <h2>Liquidity pools</h2>
+              <p>
+                Pour GEM and GOLD into a shared tank, earn fees from every
+                swap, and meet impermanent loss.
+              </p>
+            </button>
+            <button className="home-card" onClick={() => setScreen('lending')}>
+              <h2>Lending</h2>
+              <p>
+                Lend GOLD for interest, then borrow against locked GEM — and
+                keep the scale from tipping into liquidation.
+              </p>
+            </button>
+          </div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="app">
-      <PoolScene
-        pool={state.pool}
-        wallet={state.wallet}
-        showTank={features.has('tank')}
-        events={state.events}
-        visits={visits}
-        onVisitDone={removeVisit}
-      />
-      <Hud
-        state={state}
-        dispatch={dispatch}
-        actions={actions}
-        features={features}
-        autoTraders={autoTraders}
-        onToggleTraders={() => setAutoTraders((v) => !v)}
-        speed={speed}
-        onCycleSpeed={cycleSpeed}
-        onPriceShock={triggerPriceShock}
-      />
-      {features.has('curve') && <CurvePanel pool={state.pool} />}
-      <ChapterPanel
-        chapter={chapter}
-        index={chapterIndex}
-        count={CHAPTERS.length}
-        taskDone={taskDone}
-        onNext={nextChapter}
-        onSkip={skipTutorial}
-      />
+    <div className="app with-back">
+      <button className="back-button" onClick={() => setScreen('home')}>
+        ← Strategies
+      </button>
+      {screen === 'amm' && <AmmStrategy />}
+      {screen === 'lending' && (
+        <div className="home">
+          <h1>Lending</h1>
+          <p className="home-tagline">Coming in the next pass.</p>
+        </div>
+      )}
     </div>
   )
 }
