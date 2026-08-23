@@ -23,7 +23,7 @@ export function Hud({
   autoTraders,
   onToggleTraders,
 }: Props) {
-  const { pool, wallet, entry, stats } = state
+  const { pool, wallet, entry, userFees, stats } = state
   const gemPrice = price(pool, 'GEM')
   const sharePct =
     pool.totalShares === 0 ? 0 : (wallet.shares / pool.totalShares) * 100
@@ -31,15 +31,17 @@ export function Hud({
   const anyAction = actions.size > 0
 
   // Value of the LP position vs simply holding the deposited tokens,
-  // both measured in GOLD. Fee earnings are included automatically,
-  // because fees live inside the reserves.
-  let comparison: { lp: number; hold: number } | null = null
+  // all measured in GOLD. The net splits exactly into two forces:
+  // fees earned (tracked per fee) and price drift (the remainder,
+  // which is the impermanent loss).
+  let comparison: { fees: number; drift: number; net: number } | null = null
   if (entry && wallet.shares > 0) {
     const pos = positionAmounts(pool, wallet.shares)
-    comparison = {
-      lp: pos.gold + pos.gem * gemPrice,
-      hold: entry.gold + entry.gem * gemPrice,
-    }
+    const lp = pos.gold + pos.gem * gemPrice
+    const hold = entry.gold + entry.gem * gemPrice
+    const fees = userFees.GOLD + userFees.GEM * gemPrice
+    const net = lp - hold
+    comparison = { fees, drift: net - fees, net }
   }
 
   return (
@@ -52,8 +54,8 @@ export function Hud({
           <div className="row">1 GEM = {fmt(gemPrice, 3)} GOLD</div>
           {features.has('fees') && (
             <div className="row fees">
-              Fees kept: {fmt(stats.feesCollected.GEM, 1)} GEM +{' '}
-              {fmt(stats.feesCollected.GOLD, 1)} GOLD
+              Tank fees (all shareholders): {fmt(stats.feesCollected.GEM, 1)} GEM
+              + {fmt(stats.feesCollected.GOLD, 1)} GOLD
             </div>
           )}
         </section>
@@ -104,11 +106,17 @@ export function Hud({
           <h2>LP vs holding</h2>
           {comparison ? (
             <>
-              <div className="row">As LP: {fmt(comparison.lp, 1)} GOLD</div>
-              <div className="row">If held: {fmt(comparison.hold, 1)} GOLD</div>
-              <div className={`row ${comparison.lp >= comparison.hold ? 'up' : 'down'}`}>
-                {comparison.lp >= comparison.hold ? '▲' : '▼'}{' '}
-                {fmt(Math.abs(comparison.lp - comparison.hold), 2)} GOLD
+              <div className="row up">
+                Fees you earned: +{fmt(comparison.fees, 2)} GOLD
+              </div>
+              <div className={`row ${comparison.drift >= 0 ? 'up' : 'down'}`}>
+                Price drift: {comparison.drift >= 0 ? '+' : '−'}
+                {fmt(Math.abs(comparison.drift), 2)} GOLD
+              </div>
+              <div className={`row net ${comparison.net >= 0 ? 'up' : 'down'}`}>
+                {comparison.net >= 0 ? '▲' : '▼'} Net vs holding:{' '}
+                {comparison.net >= 0 ? '+' : '−'}
+                {fmt(Math.abs(comparison.net), 2)} GOLD
               </div>
             </>
           ) : (

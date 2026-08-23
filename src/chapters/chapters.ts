@@ -79,8 +79,8 @@ export const CHAPTERS: Chapter[] = [
     title: 'Fees',
     body:
       'Every swap pays a 0.3% fee that stays in the tank, so the tank ' +
-      'slowly overfills. That extra liquid belongs to shareholders like ' +
-      'you. Let the traders loose and watch the fees add up.',
+      'slowly overfills. Your cut of each fee is credited the moment it ' +
+      'is paid. Let the traders loose and watch your earnings grow.',
     unlocks: ['autoTraders'],
     reveals: ['fees'],
     task: {

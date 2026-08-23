@@ -18,10 +18,13 @@ export interface SimStats {
 
 // Everything the app remembers. `entry` records what the user put in,
 // so the HUD can compare the LP position against simply holding.
+// `userFees` is the user's pro-rata cut of every fee paid while they
+// held shares; it resets with `entry` on withdrawal.
 export interface SimState {
   pool: Pool
   wallet: Wallet
   entry: { gem: number; gold: number } | null
+  userFees: { GEM: number; GOLD: number }
   stats: SimStats
 }
 
@@ -35,12 +38,28 @@ export const initialSim: SimState = {
   pool: createPool(1000, 1000),
   wallet: { GEM: 500, GOLD: 500, shares: 0 },
   entry: null,
+  userFees: { GEM: 0, GOLD: 0 },
   stats: {
     userSwapCount: 0,
     liquidityAddCount: 0,
     traderSwapCount: 0,
     feesCollected: { GEM: 0, GOLD: 0 },
   },
+}
+
+// The user's cut of one fee, credited at the moment the fee is paid.
+// Swaps never change share counts, so the pre-swap fraction is exact.
+function creditUserFees(
+  state: SimState,
+  tokenIn: TokenId,
+  feePaid: number,
+): SimState['userFees'] {
+  if (state.wallet.shares === 0) return state.userFees
+  const cut = feePaid * (state.wallet.shares / state.pool.totalShares)
+  return {
+    ...state.userFees,
+    [tokenIn]: state.userFees[tokenIn] + cut,
+  }
 }
 
 function collectFee(
@@ -66,6 +85,7 @@ export function simReducer(state: SimState, action: SimAction): SimState {
         ...state,
         pool: result.pool,
         wallet,
+        userFees: creditUserFees(state, action.tokenIn, result.feePaid),
         stats: {
           ...state.stats,
           userSwapCount: state.stats.userSwapCount + 1,
@@ -79,6 +99,7 @@ export function simReducer(state: SimState, action: SimAction): SimState {
       return {
         ...state,
         pool: result.pool,
+        userFees: creditUserFees(state, action.tokenIn, result.feePaid),
         stats: {
           ...state.stats,
           traderSwapCount: state.stats.traderSwapCount + 1,
@@ -125,6 +146,7 @@ export function simReducer(state: SimState, action: SimAction): SimState {
           shares: 0,
         },
         entry: null,
+        userFees: { GEM: 0, GOLD: 0 },
       }
     }
   }
