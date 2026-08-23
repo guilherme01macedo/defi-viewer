@@ -93,3 +93,146 @@ body,
   background: rgba(14, 116, 144, 0.8);
   border-color: #22d3ee;
 }
+
+.hud .muted {
+  color: #64748b;
+}
+
+.hud .fees {
+  color: #4ade80;
+}
+
+/* chapter narration, bottom center */
+.chapter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px));
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 14px 20px 16px;
+  backdrop-filter: blur(6px);
+  text-align: center;
+}
+
+.chapter h1 {
+  font-size: 17px;
+  margin-bottom: 6px;
+}
+
+.chapter-num {
+  color: #64748b;
+}
+
+.chapter p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.chapter-task {
+  margin-top: 8px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.chapter-task.task-done {
+  color: #4ade80;
+}
+
+.chapter-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chapter-dots .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.3);
+}
+
+.chapter-dots .dot.done {
+  background: rgba(56, 189, 248, 0.5);
+}
+
+.chapter-dots .dot.current {
+  background: #38bdf8;
+}
+
+.chapter-next {
+  margin-top: 10px;
+  padding: 7px 26px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b1020;
+  background: #38bdf8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.chapter-next:hover:not(:disabled) {
+  background: #7dd3fc;
+}
+
+.chapter-next:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* x·y=k curve, top right */
+.curve-panel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 264px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  padding: 10px 12px 6px;
+  backdrop-filter: blur(6px);
+}
+
+.curve-panel h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.curve-panel .axis {
+  stroke: rgba(148, 163, 184, 0.4);
+  stroke-width: 1;
+}
+
+.curve-panel .guide {
+  stroke: rgba(148, 163, 184, 0.25);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.curve-panel .curve {
+  fill: none;
+  stroke: #94a3b8;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.curve-panel .dot-halo {
+  fill: rgba(226, 232, 240, 0.15);
+}
+
+.curve-panel .dot-core {
+  fill: #e2e8f0;
+}
+
+.curve-panel .axis-label {
+  font-size: 9.5px;
+  fill: #94a3b8;
+}
