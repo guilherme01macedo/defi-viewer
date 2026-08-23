@@ -192,6 +192,32 @@ body,
   cursor: default;
 }
 
+.chapter-skip {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 2px 4px;
+  font-size: 11px;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.chapter-skip:hover {
+  color: #94a3b8;
+  text-decoration: underline;
+}
+
+.hud button.shock {
+  background: rgba(127, 29, 29, 0.55);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.hud button.shock:hover {
+  background: rgba(153, 27, 27, 0.75);
+}
+
 /* x·y=k curve, top right */
 .curve-panel {
   position: absolute;

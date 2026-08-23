@@ -13,7 +13,23 @@ export interface SimStats {
   userSwapCount: number
   liquidityAddCount: number
   traderSwapCount: number
+  priceShockCount: number
   feesCollected: { GEM: number; GOLD: number }
+}
+
+// A state transition the scene can animate: what flowed, and where.
+// The state alone cannot say "25 GOLD arrived from a trader" — events can.
+export type FlowKind = 'userSwap' | 'traderSwap' | 'shock' | 'add' | 'remove'
+
+export interface FlowEvent {
+  id: number
+  kind: FlowKind
+  tokenIn?: TokenId
+  amountIn?: number
+  amountOut?: number
+  gem?: number
+  gold?: number
+  visitId?: number
 }
 
 // Everything the app remembers. `entry` records what the user put in,
@@ -26,11 +42,14 @@ export interface SimState {
   entry: { gem: number; gold: number } | null
   userFees: { GEM: number; GOLD: number }
   stats: SimStats
+  events: FlowEvent[]
+  nextEventId: number
 }
 
 export type SimAction =
   | { type: 'userSwap'; tokenIn: TokenId; amountIn: number }
-  | { type: 'traderSwap'; tokenIn: TokenId; amountIn: number }
+  | { type: 'traderSwap'; tokenIn: TokenId; amountIn: number; visitId?: number }
+  | { type: 'priceShock'; visitId?: number }
   | { type: 'addLiquidity'; gemAmount: number }
   | { type: 'removeAll' }
 
@@ -43,8 +62,21 @@ export const initialSim: SimState = {
     userSwapCount: 0,
     liquidityAddCount: 0,
     traderSwapCount: 0,
+    priceShockCount: 0,
     feesCollected: { GEM: 0, GOLD: 0 },
   },
+  events: [],
+  nextEventId: 1,
+}
+
+function pushEvent(
+  state: SimState,
+  event: Omit<FlowEvent, 'id'>,
+): Pick<SimState, 'events' | 'nextEventId'> {
+  return {
+    events: [...state.events, { ...event, id: state.nextEventId }].slice(-10),
+    nextEventId: state.nextEventId + 1,
+  }
 }
 
 // The user's cut of one fee, credited at the moment the fee is paid.
@@ -91,6 +123,12 @@ export function simReducer(state: SimState, action: SimAction): SimState {
           userSwapCount: state.stats.userSwapCount + 1,
           feesCollected: collectFee(state.stats, action.tokenIn, result.feePaid),
         },
+        ...pushEvent(state, {
+          kind: 'userSwap',
+          tokenIn: action.tokenIn,
+          amountIn: action.amountIn,
+          amountOut: result.amountOut,
+        }),
       }
     }
     case 'traderSwap': {
@@ -105,6 +143,37 @@ export function simReducer(state: SimState, action: SimAction): SimState {
           traderSwapCount: state.stats.traderSwapCount + 1,
           feesCollected: collectFee(state.stats, action.tokenIn, result.feePaid),
         },
+        ...pushEvent(state, {
+          kind: 'traderSwap',
+          tokenIn: action.tokenIn,
+          amountIn: action.amountIn,
+          amountOut: result.amountOut,
+          visitId: action.visitId,
+        }),
+      }
+    }
+    case 'priceShock': {
+      // A whale trade: large enough to visibly bend the price.
+      const tokenIn: TokenId =
+        state.stats.priceShockCount % 2 === 0 ? 'GOLD' : 'GEM'
+      const amountIn = state.pool.reserves[tokenIn] * 0.45
+      const result = swap(state.pool, tokenIn, amountIn)
+      return {
+        ...state,
+        pool: result.pool,
+        userFees: creditUserFees(state, tokenIn, result.feePaid),
+        stats: {
+          ...state.stats,
+          priceShockCount: state.stats.priceShockCount + 1,
+          feesCollected: collectFee(state.stats, tokenIn, result.feePaid),
+        },
+        ...pushEvent(state, {
+          kind: 'shock',
+          tokenIn,
+          amountIn,
+          amountOut: result.amountOut,
+          visitId: action.visitId,
+        }),
       }
     }
     case 'addLiquidity': {
@@ -132,6 +201,11 @@ export function simReducer(state: SimState, action: SimAction): SimState {
           ...state.stats,
           liquidityAddCount: state.stats.liquidityAddCount + 1,
         },
+        ...pushEvent(state, {
+          kind: 'add',
+          gem: action.gemAmount,
+          gold: goldAmount,
+        }),
       }
     }
     case 'removeAll': {
@@ -147,6 +221,11 @@ export function simReducer(state: SimState, action: SimAction): SimState {
         },
         entry: null,
         userFees: { GEM: 0, GOLD: 0 },
+        ...pushEvent(state, {
+          kind: 'remove',
+          gem: result.gemOut,
+          gold: result.goldOut,
+        }),
       }
     }
   }

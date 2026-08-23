@@ -2,7 +2,12 @@ import type { SimState, SimStats } from '../state/useSim'
 
 // What the HUD lets the user do, and what the scene/UI shows.
 // Both are cumulative: a chapter adds to everything before it.
-export type ActionKey = 'swap' | 'addLiquidity' | 'withdraw' | 'autoTraders'
+export type ActionKey =
+  | 'swap'
+  | 'addLiquidity'
+  | 'withdraw'
+  | 'autoTraders'
+  | 'priceShock'
 export type FeatureKey = 'tank' | 'curve' | 'lpPanel' | 'fees'
 
 export interface Chapter {
@@ -94,8 +99,14 @@ export const CHAPTERS: Chapter[] = [
     body:
       'When the price drifts from where you deposited, your shares become ' +
       'worth less than simply holding both tokens. That gap is impermanent ' +
-      'loss. Fees push the other way — the panel shows which side is winning.',
+      'loss, and fees push the other way — the panel shows which side is ' +
+      'winning. Call in the whale to see the gap tear open.',
     reveals: ['lpPanel'],
+    unlocks: ['priceShock'],
+    task: {
+      label: 'Trigger a price shock',
+      isDone: (s, b) => s.stats.priceShockCount > b.priceShockCount,
+    },
   },
   {
     id: 'sandbox',

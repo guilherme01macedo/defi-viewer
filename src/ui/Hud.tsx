@@ -13,6 +13,7 @@ interface Props {
   features: Set<FeatureKey>
   autoTraders: boolean
   onToggleTraders: () => void
+  onPriceShock: () => void
 }
 
 export function Hud({
@@ -22,6 +23,7 @@ export function Hud({
   features,
   autoTraders,
   onToggleTraders,
+  onPriceShock,
 }: Props) {
   const { pool, wallet, entry, userFees, stats } = state
   const gemPrice = price(pool, 'GEM')
@@ -96,6 +98,11 @@ export function Hud({
           {actions.has('autoTraders') && (
             <button onClick={onToggleTraders} className={autoTraders ? 'active' : ''}>
               {autoTraders ? 'Stop' : 'Start'} auto traders
+            </button>
+          )}
+          {actions.has('priceShock') && (
+            <button onClick={onPriceShock} className="shock">
+              Price shock (whale trade)
             </button>
           )}
         </section>

@@ -6,12 +6,18 @@ interface Props {
   count: number
   taskDone: boolean
   onNext: () => void
+  onSkip: () => void
 }
 
-export function ChapterPanel({ chapter, index, count, taskDone, onNext }: Props) {
+export function ChapterPanel({ chapter, index, count, taskDone, onNext, onSkip }: Props) {
   const isLast = index === count - 1
   return (
     <div className="chapter">
+      {!isLast && (
+        <button className="chapter-skip" onClick={onSkip}>
+          Skip tutorial →
+        </button>
+      )}
       <div className="chapter-dots">
         {Array.from({ length: count }, (_, i) => (
           <span
