@@ -26,7 +26,12 @@ export function LendingScene({ state, features, visits, onVisitDone }: Props) {
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 8, 5]} intensity={1.2} />
       <directionalLight position={[-5, 4, -3]} intensity={0.4} />
-      {showTank && <LendingPoolTank market={state.market} />}
+      {showTank && (
+        <LendingPoolTank
+          deposits={state.market.deposits}
+          borrowed={state.market.borrowed}
+        />
+      )}
       {features.has('scale') && (
         <CollateralScale
           position={SCALE_POS}

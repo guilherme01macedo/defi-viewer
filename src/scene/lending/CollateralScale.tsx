@@ -15,9 +15,13 @@ const FULL_AT = 500 // tokens that fill a pan's flask
 
 interface Props {
   position: [number, number, number]
-  collateral: number // GEM locked
-  debt: number // GOLD owed
-  price: number // oracle price of GEM
+  collateral: number // collateral tokens locked
+  debt: number // debt tokens owed
+  price: number // price of the collateral token, in debt-token units
+  collateralColor?: string
+  collateralLabel?: string
+  debtColor?: string
+  debtLabel?: string
 }
 
 // tilt 0 = level = health factor 1; positive = debt side sinking.
@@ -28,15 +32,24 @@ function targetTilt(collateral: number, debt: number, price: number): number {
   return THREE.MathUtils.clamp((ratio - 1) * 0.6, -0.32, 0.4)
 }
 
-export function CollateralScale({ position, collateral, debt, price }: Props) {
+export function CollateralScale({
+  position,
+  collateral,
+  debt,
+  price,
+  collateralColor = GEM_COLOR,
+  collateralLabel = 'COLLATERAL',
+  debtColor = GOLD_COLOR,
+  debtLabel = 'DEBT',
+}: Props) {
   const beam = useRef<THREE.Group>(null)
   const leftPan = useRef<THREE.Group>(null)
   const rightPan = useRef<THREE.Group>(null)
   const leftRod = useRef<THREE.Mesh>(null)
   const rightRod = useRef<THREE.Mesh>(null)
 
-  const gemHeight = Math.min(collateral / FULL_AT, 1) * 0.8
-  const goldHeight = Math.min(debt / FULL_AT, 1) * 0.8
+  const collateralHeight = Math.min(collateral / FULL_AT, 1) * 0.8
+  const debtHeight = Math.min(debt / FULL_AT, 1) * 0.8
 
   useFrame((_, delta) => {
     if (!beam.current || !leftPan.current || !rightPan.current) return
@@ -107,9 +120,12 @@ export function CollateralScale({ position, collateral, debt, price }: Props) {
           <cylinderGeometry args={[0.36, 0.36, 0.05, 20]} />
           <meshStandardMaterial color="#475569" roughness={0.5} />
         </mesh>
-        <mesh position={[0, 0.05 + gemHeight / 2, 0]} scale={[1, Math.max(gemHeight, 0.001), 1]}>
+        <mesh
+          position={[0, 0.05 + collateralHeight / 2, 0]}
+          scale={[1, Math.max(collateralHeight, 0.001), 1]}
+        >
           <cylinderGeometry args={[0.24, 0.24, 1, 20]} />
-          <meshStandardMaterial color={GEM_COLOR} transparent opacity={0.9} roughness={0.15} />
+          <meshStandardMaterial color={collateralColor} transparent opacity={0.9} roughness={0.15} />
         </mesh>
         <mesh position={[0, 0.5, 0]}>
           <cylinderGeometry args={[0.29, 0.29, 0.9, 20, 1, true]} />
@@ -134,17 +150,20 @@ export function CollateralScale({ position, collateral, debt, price }: Props) {
           <cylinderGeometry args={[0.36, 0.36, 0.05, 20]} />
           <meshStandardMaterial color="#475569" roughness={0.5} />
         </mesh>
-        <mesh position={[0, 0.05 + goldHeight / 2, 0]} scale={[1, Math.max(goldHeight, 0.001), 1]}>
+        <mesh
+          position={[0, 0.05 + debtHeight / 2, 0]}
+          scale={[1, Math.max(debtHeight, 0.001), 1]}
+        >
           <cylinderGeometry args={[0.24, 0.24, 1, 20]} />
-          <meshStandardMaterial color={GOLD_COLOR} transparent opacity={0.9} roughness={0.15} />
+          <meshStandardMaterial color={debtColor} transparent opacity={0.9} roughness={0.15} />
         </mesh>
       </group>
 
-      <Text position={[-ARM, 2.65, 0]} fontSize={0.13} color={GEM_COLOR}>
-        COLLATERAL
+      <Text position={[-ARM, 2.65, 0]} fontSize={0.13} color={collateralColor}>
+        {collateralLabel}
       </Text>
-      <Text position={[ARM, 2.65, 0]} fontSize={0.13} color={GOLD_COLOR}>
-        DEBT
+      <Text position={[ARM, 2.65, 0]} fontSize={0.13} color={debtColor}>
+        {debtLabel}
       </Text>
       <Text position={[0, 3.0, 0]} fontSize={0.2} color="#94a3b8">
         YOUR VAULT
