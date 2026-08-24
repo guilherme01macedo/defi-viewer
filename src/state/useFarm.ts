@@ -76,8 +76,10 @@ export type FarmAction =
   | { type: 'tick'; days: number }
   | { type: 'liquidate'; visitId?: number }
 
+// A smaller pool than the AMM chapter, so the user's LP share (and
+// with it the fee drip) is big enough to visibly outpace the interest.
 export const initialFarm: FarmState = {
-  pool: createPool(1000, 1000),
+  pool: createPool(500, 500),
   gemMarket: { deposits: 1200, borrowed: 500 },
   wallet: { GEM: 100, GOLD: 700, shares: 0 },
   goldLocked: 0,
@@ -227,6 +229,11 @@ export function farmReducer(state: FarmState, action: FarmAction): FarmState {
       }
       const result = addLiquidity(state.pool, action.gemAmount, goldAmount)
       const gemPrice = price(state.pool, 'GEM')
+      // The farm starts when the first LP lands: re-anchor the debt
+      // baseline (and the interest counter) at this price, so the panel
+      // measures both legs from the same moment. Otherwise price moves
+      // between borrowing and LPing would show up as hedge losses.
+      const opening = state.lpEntryValue === null
       return {
         ...state,
         pool: result.pool,
@@ -237,7 +244,12 @@ export function farmReducer(state: FarmState, action: FarmAction): FarmState {
         },
         lpEntryValue:
           (state.lpEntryValue ?? 0) + goldAmount + action.gemAmount * gemPrice,
-        stats: { ...state.stats, lpAddCount: state.stats.lpAddCount + 1 },
+        debtBaseline: opening ? state.gemDebt * gemPrice : state.debtBaseline,
+        stats: {
+          ...state.stats,
+          lpAddCount: state.stats.lpAddCount + 1,
+          interestPaid: opening ? 0 : state.stats.interestPaid,
+        },
         ...pushPoolEvent(state, {
           kind: 'add',
           gem: action.gemAmount,

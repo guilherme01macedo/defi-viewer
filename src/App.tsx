@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { AmmStrategy } from './strategies/Amm'
+import { FarmStrategy } from './strategies/Farm'
 import { LendingStrategy } from './strategies/Lending'
 
-type Screen = 'home' | 'amm' | 'lending'
+type Screen = 'home' | 'amm' | 'lending' | 'farm'
 
 // Top-level router. Each strategy owns its own scene, chapters, and
 // state; going back to the home screen unmounts it and resets it.
@@ -32,6 +33,13 @@ export default function App() {
                 keep the scale from tipping into liquidation.
               </p>
             </button>
+            <button className="home-card" onClick={() => setScreen('farm')}>
+              <h2>Delta-neutral farming</h2>
+              <p>
+                Borrow the GEM you pour into the pool, so the fees are yours
+                but the price swings mostly cancel. Both tools, one stage.
+              </p>
+            </button>
           </div>
         </div>
       </div>
@@ -45,6 +53,7 @@ export default function App() {
       </button>
       {screen === 'amm' && <AmmStrategy />}
       {screen === 'lending' && <LendingStrategy />}
+      {screen === 'farm' && <FarmStrategy />}
     </div>
   )
 }
