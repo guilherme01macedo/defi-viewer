@@ -64,13 +64,35 @@ The lending scene has its own metaphors on top of the liquid language:
 Keep the metaphor honest: every animation must map to a real state change in
 the simulation. Never animate something the math did not do.
 
+## Strategy 3: Delta-neutral farming
+
+The capstone: both instruments on one stage. The user locks GOLD as
+collateral, borrows GEM from a mirrored GEM lending market, and LPs the
+borrowed GEM into the pool. The fees are theirs, but the price exposure
+mostly cancels: when GEM moves, the LP leg and the debt leg pull against
+each other.
+
+- The pool is the only price. The lending side reads the tank's level
+  ratio, with the collateral and debt roles swapped (the helpers receive
+  the inverse price).
+- The debt baseline re-anchors when the first LP lands, so the net panel
+  measures both legs from the same moment.
+- The net panel's rows sum exactly: fees + LP price move + debt hedge −
+  interest = hedged net, shown beside the unhedged net.
+- Traders lean toward arbitrage, so the price oscillates around fair
+  value. Small wobble is the proof that the hedge works.
+- The catches are chapter six: a whale-sized move costs even the hedged
+  position (impermanent loss), and a pump inflates the GEM debt toward
+  liquidation.
+
 ## Experience shape
 
 Each strategy is a guided story in short chapters, each one interactive.
 After the last chapter the scene unlocks into a free sandbox. The AMM story
 has eight chapters (tokens, pool, swaps, price, providing, fees, impermanent
 loss, sandbox). The lending story has six (pool, interest, borrowing, health
-factor, liquidation, sandbox).
+factor, liquidation, sandbox). The farming story has seven (setup, the idea,
+the short, farm, the test, the catches, sandbox).
 
 ## Stack
 
@@ -96,6 +118,6 @@ directly.
 
 ## Roadmap (later, not now)
 
-Future strategies reuse the same world and resources:
-
-- Delta-neutral farming (combines the AMM and lending chapters)
+The three planned strategies have shipped. Candidates for a next wave,
+all reusing the same world: staking with unbonding periods, a stableswap
+pool, or leveraged looping on the lending market.
